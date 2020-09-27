@@ -33,9 +33,6 @@ void push(struct stack *this, int x)
         new_ll_stack->block = malloc(sizeof(struct stack));
         new_ll_stack->next = curr->me->next;
 
-        /* Put the final element in the `stack` */
-        this->stk[99] = x;
-
         /* Copy old stack to new allocated */
         memcpy(new_ll_stack->block, this, sizeof(struct stack));
         curr->me->next = new_ll_stack;
@@ -50,30 +47,28 @@ void push(struct stack *this, int x)
 
 int pop(struct stack *this)
 {
-    if (this->sp > 0)
+    if (this->sp > -1)
         return this->stk[this->sp--];
 
     /* Reach the bottom of `stack` */
-    int ret_val = this->stk[0];
     pool_t *curr = stack_pool;
     while (curr && curr->me && curr->me->block != this)
         curr = curr->prev;
 
     /* Must be guaranteed which could be found! */
-    if (!curr->me->next)
-        return ret_val;
+    if (curr->me->next) {
+        /* Copy next block to `this` */
+        struct stack *stack_next = curr->me->next->block;
+        ll_stack_t *tmp = curr->me->next;
+        memcpy(this, stack_next, sizeof(struct stack));
+        curr->me->next = curr->me->next->next;
+        this->sp = 98;
 
-    /* Copy next block to `this` */
-    struct stack *stack_next = curr->me->next->block;
-    ll_stack_t *tmp = curr->me->next;
-    memcpy(this, stack_next, sizeof(struct stack));
-    memcpy(curr->me->block, curr->me->next->block, sizeof(struct stack));
-    curr->me->next = curr->me->next->next;
-    this->sp = 99;
-    free(stack_next);
-    free(tmp);
+        free(stack_next);
+        free(tmp);
+    }
 
-    return ret_val;
+    return this->stk[99];
 }
 
 struct stack *new_stack()
