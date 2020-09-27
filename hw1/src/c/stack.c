@@ -28,6 +28,7 @@ void push(struct stack *this, int x)
             curr = curr->prev;
 
         /* Create a new block */
+        /* Must be guaranteed which could be found! */
         ll_stack_t *new_ll_stack = malloc(sizeof(ll_stack_t));
         new_ll_stack->block = malloc(sizeof(struct stack));
         new_ll_stack->next = curr->me->next;
@@ -49,10 +50,6 @@ void push(struct stack *this, int x)
 
 int pop(struct stack *this)
 {
-    if (!this) {
-        perror("Popping an empty stack");
-        return __INT32_MAX__;
-    }
     if (this->sp > 0)
         return this->stk[this->sp--];
 
@@ -62,7 +59,8 @@ int pop(struct stack *this)
     while (curr && curr->me && curr->me->block != this)
         curr = curr->prev;
 
-    if (!curr || !curr->me->next)
+    /* Must be guaranteed which could be found! */
+    if (!curr->me->next)
         return ret_val;
 
     /* Copy next block to `this` */
@@ -101,6 +99,7 @@ void delete_stack(struct stack *stk)
     while ((*curr) && (*curr)->me && (*curr)->me->block != stk)
         curr = &(*curr)->prev;
 
+    /* Must be guaranteed which could be found! */
     for (ll_stack_t *next, *tmp = (*curr)->me; tmp; tmp = next) {
         next = tmp->next;
         free(tmp->block);
