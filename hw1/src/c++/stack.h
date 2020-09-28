@@ -1,16 +1,16 @@
 #ifndef __STACK_H__
 #define __STACK_H__
+#include <stack>
 
 class Stack
 {
-    enum { STACK_SIZE = 100 };
-    int stk[STACK_SIZE];
-    int sp;
+    std::stack<int> myStack;
 
 public:
-    Stack() { sp = -1; }
-    void push(int x) { stk[++sp] = x; }
-    int pop() { return stk[sp--]; }
+    Stack() {}
+    ~Stack() {}
+    void push(int x);
+    int pop();
 };
 
 #endif
