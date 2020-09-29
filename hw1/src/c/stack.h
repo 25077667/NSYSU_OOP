@@ -8,9 +8,17 @@ struct stack {
     int stk[STACK_SIZE];
 };
 
-extern void push(struct stack *this, int x);
-extern int pop(struct stack *this);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern void push(struct stack *_this, int x);
+extern int pop(struct stack *_this);
 extern struct stack *new_stack();
 extern void delete_stack(struct stack *stk);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

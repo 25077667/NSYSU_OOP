@@ -1,14 +1,13 @@
-#ifndef __STACK_H__
-#define __STACK_H__
-#include <stack>
+#ifndef __STACK_HPP__
+#define __STACK_HPP__
 
 class Stack
 {
-    std::stack<int> myStack;
+    struct stack *my_stack;
 
 public:
-    Stack() {}
-    ~Stack() {}
+    Stack();
+    ~Stack();
     void push(int x);
     int pop();
 };
