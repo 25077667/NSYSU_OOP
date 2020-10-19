@@ -49,6 +49,7 @@ struct tar {
 class Tar : tar
 {
 private:
+    char mode = 0;
     // Print metadata of entire tar file
     void printTar();
     // Calculate checksum (6 ASCII octet digits + NULL + space)
@@ -56,25 +57,34 @@ private:
 
 public:
     Tar();
+    Tar(std::string destName);
+    Tar(std::string destName, char mode);
     Tar(const Tar &_source);
     ~Tar();
     // Read from a tar file
     friend std::ifstream operator>>(std::ifstream &_in, Tar &_tar);
     // Write a file as tar
     friend std::ofstream operator<<(std::ofstream &_out, const Tar _tar);
+    // Set/Get the mode of this archive
+    void setMode(char mode);
+    char getMode();
     // Assignment operator
     Tar &operator=(const Tar &_source);
 
 
     // Append a new file into a tar, return false if failed
-    bool append(const std::string filename);
+    bool append(std::string filename);
     // Free this file recursively, return false if failed
-    bool remove(const std::string filename);
+    bool remove(std::string filename);
     // Append files which are newer than the corresponding copy in the archive.
     bool update();
     // List the contents
     std::vector<std::string> ls(std::string args);
+    // extract
     bool extract();
+    // operate this archive with a file
+    void operate(std::string filename);
+    void operate(std::string filename, char mode);
 };
 
 #endif
