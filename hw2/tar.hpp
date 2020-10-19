@@ -3,7 +3,18 @@
 #include <fstream>
 #include <vector>
 
-struct tar {
+// file type values (1 octet)
+#define REGULAR 0
+#define NORMAL '0'
+#define HARDLINK '1'
+#define SYMLINK '2'
+#define CHAR '3'
+#define BLOCK '4'
+#define DIRECTORY '5'
+#define FIFO '6'
+#define CONTIGUOUS '7'
+
+struct _tar {
     char original_name[100];  // original filenme; only available when writing
                               // into a tar
     unsigned int begin;       // location of data in file (including metadata)
@@ -42,14 +53,15 @@ struct tar {
                           // block)
     };
 
-    struct tar *next;
+    struct _tar *next;
 };
 
 
-class Tar : tar
+class Tar
 {
 private:
     char mode = 0;
+    struct _tar me;
     // Print metadata of entire tar file
     void printTar();
     // Calculate checksum (6 ASCII octet digits + NULL + space)

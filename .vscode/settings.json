@@ -4,4 +4,7 @@
     "editor.wordWrap": "on",
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
+    "cSpell.ignoreWords": [
+        "acrtuxvv"
+    ],
 }
