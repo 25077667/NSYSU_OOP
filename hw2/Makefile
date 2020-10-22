@@ -5,7 +5,7 @@ all: dep
 	$(CC) $(FLAGS) tar.o main.cpp -o mytar.elf
 
 dep:
-	$(CC) $(FLAGS) -c tar.c
+	$(CC) $(FLAGS) -c tar.cpp
 
 clean:
 	rm -rf tar.o mytar.elf
