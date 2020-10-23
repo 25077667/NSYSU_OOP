@@ -1,4 +1,4 @@
-CC?=g++
+CC=g++
 FLAGS=-Wall -std=c++2a -Og -Os -g
 
 all: dep
