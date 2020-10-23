@@ -3,9 +3,15 @@
 #include <array>
 #include <cstring>
 #include <ctime>  //strftime localtime
+#include <functional>
 #include <iostream>
+#include <vector>
+using namespace std;
 
+#define OLD (entry->oldHeader)
+#define USTAR (entry->ustarHeader)
 
+// Must gurante the highest byte of `oct` is not empty
 static inline unsigned int oct2uint(char *oct, unsigned int size)
 {
     unsigned int out = 0;
@@ -15,101 +21,140 @@ static inline unsigned int oct2uint(char *oct, unsigned int size)
     return out;
 }
 
-static void printEntryMeta(std::ostream &_out, struct _tar *entry)
+static inline bool checkChecksum(const char *buffer,
+                                 size_t size,
+                                 const char *check)
 {
-    time_t mtime =
-        oct2uint(entry->oldHeader.mtime, sizeof(entry->oldHeader.mtime));
-    char mtime_str[32];
-    strftime(mtime_str, sizeof(mtime_str), "%c", localtime(&mtime));
-    _out << "File name: " << entry->oldHeader.name << "\n"
-         << "File Mode: " << entry->oldHeader.mode << " "
-         << oct2uint(entry->oldHeader.mode, sizeof(entry->oldHeader.mode))
-         << "\n"
-         << "Owner UID: " << entry->oldHeader.uid << " "
-         << oct2uint(entry->oldHeader.uid, sizeof(entry->oldHeader.uid)) << "\n"
-         << "Owner GID: " << entry->oldHeader.gid << " "
-         << oct2uint(entry->oldHeader.gid, sizeof(entry->oldHeader.gid)) << "\n"
-         << "File size: " << entry->oldHeader.size << " "
-         << oct2uint(entry->oldHeader.size, sizeof(entry->oldHeader.size))
-         << "\n"
-         << "Time: " << entry->oldHeader.mtime << " " << mtime_str << "\n"
-         << "Check sum: " << entry->oldHeader.check << std::endl;
+    unsigned int cal = 0;
+    for (size_t i = 0; i < size; i++)
+        cal += buffer[i];
 
-    switch (entry->ustarHeader.type) {
-    case REGULAR:
-    case NORMAL:
-        _out << "Normal File"
-             << "\n";
-        break;
-    case HARDLINK:
-        _out << "Hard Link"
-             << "\n";
-        break;
-    case SYMLINK:
-        _out << "Symbolic Link"
-             << "\n";
-        break;
-    case CHAR:
-        _out << "Character Special"
-             << "\n";
-        break;
-    case BLOCK:
-        _out << "Block Special"
-             << "\n";
-        break;
-    case DIRECTORY:
-        _out << "Directory"
-             << "\n";
-        break;
-    case FIFO:
-        _out << "FIFO"
-             << "\n";
-        break;
-    case CONTIGUOUS:
-        _out << "Contiguous File"
-             << "\n";
-        break;
-    }
-    _out << "Link Name: " << entry->oldHeader.link_name << "\n"
-         << "Ustar\\000: " << entry->ustarHeader.ustar[0]
-         << entry->ustarHeader.ustar[1] << entry->ustarHeader.ustar[2]
-         << entry->ustarHeader.ustar[3] << entry->ustarHeader.ustar[4]
-         << std::hex << entry->ustarHeader.ustar[5]
-         << entry->ustarHeader.ustar[6] << entry->ustarHeader.ustar[7]
-         << std::endl;
-
-    _out << "Username : " << entry->ustarHeader.owner << "\n"
-         << "Group    : " << entry->ustarHeader.group << "\n"
-         << "Major    : " << entry->ustarHeader.major << "\n"
-         << "Minor    : " << entry->ustarHeader.minor << "\n"
-         << "Prefix   : " << entry->ustarHeader.prefix << "\n"
-         << std::endl;
+    return to_string(cal) == string(check);
 }
 
-void Tar::printTar(std::ostream &_out = std::cout)
+/*
+ * Support t only(now)
+ *
+ * TODO: Support the u modes(and the other modes)
+ */
+static auto modeParser(char operateMode)
 {
-    auto archive = &this->me;
-    while (archive) {
-        printEntryMeta(_out, archive);
-        archive = archive->next;
+    if (operateMode & 0b00010100)  // t & x
+        return (ios::binary | ios::in);
+    else if (operateMode & 0b10100000)  // r & a
+        return (ios::binary | ios::ate | ios::out);
+    else if (operateMode & 0b01000000)  // c
+        return (ios::binary | ios::out);
+    else
+        return ios::binary;  // give it wrong
+}
+
+/* Read this tar file to class */
+static void tarRead(istream &inFile, struct _tar *archive)
+{
+    while (true) {
+        try {
+            inFile.read(archive->block, sizeof(archive->block));
+
+            /* Is the file header */
+            if (checkChecksum(archive->block, sizeof(archive->block),
+                              archive->oldHeader.check)) {
+                auto _next = new (struct _tar)();
+                archive->next = _next;
+                archive = _next;
+            }
+        } catch (const std::exception &e) {
+            break;  // EOF
+        }
     }
 }
 
-Tar::Tar()
+Tar::Tar(string achieveName, char mode)
 {
     memset(&this->me, 0, sizeof(this->me));
-    this->mode = 0;
-    this->fileptr = stdout;
-}
+    auto openMode = modeParser(mode);
+    this->mode = mode;
+    this->iofile = fstream(achieveName.c_str(), openMode);
+    if (!this->iofile.good()) {
+        cerr << "File not found!" << endl;
+        _Exit(1);
+    }
 
-Tar::Tar(std::string filename, std::string mode) : Tar::Tar()
-{
-    this->fileptr = fopen(filename.c_str(), mode.c_str());
+    if (openMode & ios::in)
+        tarRead(this->iofile, &this->me);
 }
 
 Tar::Tar(const Tar &_source)
 {
-    this->fileptr = _source.fileptr;
+    this->iofile.copyfmt(_source.iofile);
     this->mode = _source.mode;
     this->me = _source.me;
+}
+
+Tar::~Tar()
+{
+    this->iofile.close();
+    struct _tar *entry = &(this->me);
+    do {
+        struct _tar *next = entry->next;
+        delete entry;
+        entry = next;
+    } while ((entry) && entry->next);
+}
+
+void Tar::operate(string filename)
+{
+    if (!filename.length()) {
+        // extract, comming soon
+        /*
+        if ((mode & 0b00000100) && this->extract())
+            cerr << "Extract failed!" << endl;
+        */
+        // ls
+        auto result = this->ls(mode);
+        for (auto i : result)
+            cout << i << endl;
+
+        return;
+    }
+
+    // The other modes
+    // FILE *fp = fopen(filename.c_str(), );
+}
+
+static inline string getFileName(struct _tar *entry)
+{
+    return string(USTAR.prefix) + string(OLD.name) + "\n";
+}
+
+static inline string getFullAttr(struct _tar *entry)
+{
+    string base = string(OLD.mode) + " " + OLD.link + " " + USTAR.owner + " " +
+                  USTAR.group + " " + OLD.size + " " + OLD.mtime + " " +
+                  USTAR.prefix + OLD.name;
+    string special = (USTAR.type == HARDLINK || USTAR.type == SYMLINK)
+                         ? string(" -> ") + USTAR.also_link_name
+                         : "";
+    special += (USTAR.type == DIRECTORY) ? "/" : "";
+    /* Maybe the contiguous file will ccause bug here */
+    return base + special + "\n";
+}
+
+vector<string> Tar::ls(char verbosity)
+{
+    verbosity = verbosity & 0b11;  // only view the last 2 bits
+    vector<string> result;
+
+    struct _tar *archive = &this->me;
+    while (archive) {
+        string line;
+        if (verbosity == 1)
+            line = getFileName(archive);
+        else if (verbosity == 2)
+            line = getFullAttr(archive);
+        result.push_back(line);
+        archive = archive->next;
+    }
+
+    return result;
 }
