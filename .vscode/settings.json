@@ -5,7 +5,8 @@
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
     "cSpell.ignoreWords": [
-        "acrtuxvv"
+        "acrtuxvv",
+        "iofile"
     ],
     "files.associations": {
         "array": "cpp",
