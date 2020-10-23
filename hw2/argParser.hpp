@@ -4,8 +4,9 @@
 #include <cstring>
 #include <iostream>
 
-#define IS_NEED_HELP(argc, argv)                                             \
-    (((argc == 2) && (strncmp(argv[1], "help", max(strlen(argv[1]), 4)))) && \
+#define IS_NEED_HELP(argc, argv)                                              \
+    (((argc == 2) && (strncmp(argv[1], "help",                                \
+                              std::max(std::strlen(argv[1]), size_t(4))))) && \
      (argc != 3))
 
 static int needHelp(std::string procName)
@@ -33,7 +34,8 @@ static void help(std::string procName)
         << "    Special files that already exist will not be replaced when "
         << "extracting (no error)" << std::endl
         << "   Regular expression expansion/matching is not done." << std::endl
-        << std::endl "    options (only one allowed at a time):" << std::endl
+        << std::endl
+        << "    options (only one allowed at a time):" << std::endl
         << "       a - append files to archive" << std::endl
         << "       c - create a new archive" << std::endl
         << std::endl
@@ -42,9 +44,11 @@ static void help(std::string procName)
         << "       u - update entries that have newer modification times"
         << std::endl
         << "       x - extract from archive" << std::endl
-        << std::endl "    other options:" << std::endl
+        << std::endl
+        << "    other options:" << std::endl
         << "       v - make operation verbose" << std::endl
-        << std::endl "Ex: " << procName << " vl archive.tar" << std::endl;
+        << std::endl
+        << "Ex: " << procName << " vl archive.tar" << std::endl;
     _Exit(0);
 }
 /*
@@ -86,7 +90,7 @@ char parser(int argc, char *argv[])
     if (IS_NEED_HELP(argc, argv))
         needHelp(std::string(argv[0]));
     else if (argc == 2)
-        needHelp(std::string(argv[0]));
+        help(std::string(argv[0]));
     return getMode(std::string(argv[1]));
 }
 
