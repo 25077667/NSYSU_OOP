@@ -55,7 +55,7 @@ struct _tar {
         detail::tar::ustarHeader ustarHeader;
         char block[512];  // Access a block directly
     };
-
+    bool isHeader;
     struct _tar *next;
 };
 

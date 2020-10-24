@@ -1,6 +1,7 @@
 #include "tar.hpp"
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstring>
 #include <ctime>  //strftime localtime
 #include <functional>
@@ -12,7 +13,7 @@ using namespace std;
 #define USTAR (entry->ustarHeader)
 
 // Must gurante the highest byte of `oct` is not empty
-static inline unsigned int oct2uint(char *oct, unsigned int size)
+static inline unsigned int oct2uint(const char *oct, unsigned int size)
 {
     unsigned int out = 0;
     size_t i = 0;
@@ -29,14 +30,63 @@ static inline bool checkChecksum(const char *buffer,
     for (size_t i = 0; i < size; i++)
         cal += buffer[i];
 
-    return to_string(cal) == string(check);
+    return cal == oct2uint(check, 8);
 }
 
-/*
- * Support t only(now)
- *
- * TODO: Support the u modes(and the other modes)
- */
+namespace convertor
+{
+inline string time(const char *mtime, size_t size)
+{
+    auto t = (long) oct2uint(mtime, size);
+    auto info = localtime(&t);
+    int m = info->tm_mon + 1, d = info->tm_mday, h = info->tm_hour,
+        n = info->tm_min;
+
+    string result = to_string(info->tm_year + 1900) + "-" +
+                    ((m < 10) ? "0" : "") + to_string(m) + "-" +
+                    ((d < 10) ? "0" : "") + to_string(d) + " " +
+                    ((h < 10) ? "0" : "") + to_string(h) + ":" +
+                    ((n < 10) ? "0" : "") + to_string(n);
+    return result;
+}
+
+inline string mode(const char *mode, char type)
+{
+    string result;
+    if (type == HARDLINK)
+        result += string("h");
+    else if (type == SYMLINK)
+        result += string("l");
+    else if (type == CHAR)
+        result += string("c");
+    else if (type == BLOCK)
+        result += string("b");
+    else if (type == DIRECTORY)
+        result += string("d");
+    else
+        result += string("-");
+    auto gp = [](const char value) {
+        string m;
+        m += (value & 4) ? "r" : "-";
+        m += (value & 2) ? "w" : "-";
+        m += (value & 1) ? "x" : "-";
+        return m;
+    };
+
+    result += gp(mode[4]) + gp(mode[5]) + gp(mode[6]);
+    return result;
+}
+inline string filesize(const char *size, size_t s)
+{
+    auto t = oct2uint(size, s);
+    string result = to_string(t);
+    int padding = 11 - result.length();
+    for (int i = 0; i < padding; i++)
+        result.insert(result.begin(), ' ');
+    return result;
+}
+};  // namespace convertor
+
 static auto modeParser(char operateMode)
 {
     if (operateMode & 0b00010100)  // t & x
@@ -52,25 +102,28 @@ static auto modeParser(char operateMode)
 /* Read this tar file to class */
 static void tarRead(istream &inFile, struct _tar *archive)
 {
-    while (true) {
-        try {
-            inFile.read(archive->block, sizeof(archive->block));
+    while (!inFile.eof()) {
+        inFile.read(archive->block, sizeof(archive->block));
+        archive->begin = inFile.tellg();
 
-            /* Is the file header */
-            if (checkChecksum(archive->block, sizeof(archive->block),
-                              archive->oldHeader.check)) {
-                auto _next = new (struct _tar)();
-                archive->next = _next;
-                archive = _next;
-            }
-        } catch (const std::exception &e) {
-            break;  // EOF
-        }
+        auto jump =
+            oct2uint(archive->oldHeader.size, sizeof(archive->oldHeader.size));
+        jump = ceil(jump / 512.0) * 512;
+
+        inFile.seekg(jump, ios_base::cur);
+        if (inFile.peek()) {  // Next char is not null
+            auto _next = new (struct _tar);
+            _next->next = 0;
+            archive->next = _next;
+            archive = _next;
+        } else
+            break;  // The padding zone is at the end
     }
 }
 
 Tar::Tar(string achieveName, char mode)
 {
+    this->me.isHeader = false;
     memset(&this->me, 0, sizeof(this->me));
     auto openMode = modeParser(mode);
     this->mode = mode;
@@ -94,18 +147,18 @@ Tar::Tar(const Tar &_source)
 Tar::~Tar()
 {
     this->iofile.close();
-    struct _tar *entry = &(this->me);
-    do {
+    struct _tar *entry = this->me.next;
+    while (entry) {
         struct _tar *next = entry->next;
         delete entry;
         entry = next;
-    } while ((entry) && entry->next);
+    }
 }
 
 void Tar::operate(string filename)
 {
     if (!filename.length()) {
-        // extract, comming soon
+        // TODO: extract
         /*
         if ((mode & 0b00000100) && this->extract())
             cerr << "Extract failed!" << endl;
@@ -113,7 +166,7 @@ void Tar::operate(string filename)
         // ls
         auto result = this->ls(mode);
         for (auto i : result)
-            cout << i << endl;
+            cout << i;
 
         return;
     }
@@ -129,8 +182,9 @@ static inline string getFileName(struct _tar *entry)
 
 static inline string getFullAttr(struct _tar *entry)
 {
-    string base = string(OLD.mode) + " " + OLD.link + " " + USTAR.owner + " " +
-                  USTAR.group + " " + OLD.size + " " + OLD.mtime + " " +
+    string base = convertor::mode(OLD.mode, USTAR.type) + " " + USTAR.owner +
+                  "/" + USTAR.group + " " + convertor::filesize(OLD.size, 12) +
+                  " " + convertor::time(OLD.mtime, sizeof(OLD.mtime)) + " " +
                   USTAR.prefix + OLD.name;
     string special = (USTAR.type == HARDLINK || USTAR.type == SYMLINK)
                          ? string(" -> ") + USTAR.also_link_name
@@ -148,10 +202,10 @@ vector<string> Tar::ls(char verbosity)
     struct _tar *archive = &this->me;
     while (archive) {
         string line;
-        if (verbosity == 1)
-            line = getFileName(archive);
-        else if (verbosity == 2)
+        if (verbosity >> 1)
             line = getFullAttr(archive);
+        else if (verbosity)
+            line = getFileName(archive);
         result.push_back(line);
         archive = archive->next;
     }
