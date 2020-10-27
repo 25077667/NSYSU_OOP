@@ -109,12 +109,9 @@ static void tarRead(istream &inFile, struct _tar *archive)
         inFile.read(archive->block, sizeof(archive->block));
 
         // Check sum
-        if (!checkChecksum(archive->block, archive->oldHeader.check)) {
-            cerr << "wrong check sum" << endl
-                 << "Might not be a correct tar file." << endl
-                 << "Exit now." << endl;
-            return;
-        }
+        if (!checkChecksum(archive->block, archive->oldHeader.check))
+            throw "Error checksum: Error is not recoverable: exiting now";
+
         archive->begin = inFile.tellg();
 
         auto jump =
