@@ -22,13 +22,16 @@ static inline unsigned int oct2uint(const char *oct, unsigned int size)
     return out;
 }
 
-static inline bool checkChecksum(const char *buffer,
-                                 size_t size,
-                                 const char *check)
+static inline bool checkChecksum(const char *buffer, const char *check)
 {
+    char localBuf[512];
+    memccpy(localBuf, buffer, sizeof(char), 512);
+    memset(&localBuf[147], ' ', 8);
+    localBuf[153] = '\0';
+    localBuf[154] = ' ';
     unsigned int cal = 0;
-    for (size_t i = 0; i < size; i++)
-        cal += buffer[i];
+    for (size_t i = 0; i < 512; i++)
+        cal += localBuf[i];
 
     return cal == oct2uint(check, 8);
 }
@@ -104,6 +107,14 @@ static void tarRead(istream &inFile, struct _tar *archive)
 {
     while (!inFile.eof()) {
         inFile.read(archive->block, sizeof(archive->block));
+
+        // Check sum
+        if (!checkChecksum(archive->block, archive->oldHeader.check)) {
+            cerr << "wrong check sum" << endl
+                 << "Might not be a correct tar file." << endl
+                 << "Exit now." << endl;
+            return;
+        }
         archive->begin = inFile.tellg();
 
         auto jump =
