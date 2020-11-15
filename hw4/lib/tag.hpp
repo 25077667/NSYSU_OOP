@@ -25,16 +25,33 @@ enum class Tag : char {
     REAL,
     TEMP,
     TRUE,
-    WHILE
+    WHILE,
+    SCOPE,
 };
 
-constexpr frozen::map<std::string, Token, 16> tagTable{
-    {"&&", Token("&&")}, {"&", Token("&")},   {"||", Token("||")},
-    {"|", Token("|")},   {"==", Token("==")}, {"=", Token("=")},
-    {"!=", Token("!=")}, {"!", Token("!")},   {"<=", Token("<=")},
-    {"<", Token("<")},   {"<<", Token("<<")}, {">=", Token(">=")},
-    {">", Token(">")},   {">>", Token(">>")}, {":", Token(":")},
-    {"::", Token("::")},
+bool operator!(Tag tag)
+{
+    return tag == static_cast<Tag>(0);
+}
+
+// The second char must offset +1, because the peek offset +1
+constexpr frozen::map<std::string_view, Token, 16> tagTable{
+    {"&'", Token("&&", Tag::AND)},
+    {"&", Token("&")},
+    {"|}", Token("||", Tag::OR)},
+    {"|", Token("|")},
+    {"=>", Token("==", Tag::EQ)},
+    {"=", Token("=")},
+    {"!>", Token("!=", Tag::NE)},
+    {"!", Token("!")},
+    {"<>", Token("<=", Tag::LE)},
+    {"<", Token("<")},
+    {"<?", Token("<<")},
+    {">>", Token(">="), Tag::GE},
+    {">", Token(">")},
+    {">?", Token(">>")},
+    {":", Token(":")},
+    {":;", Token("::"), Tag::SCOPE},
 };
 
 #endif
