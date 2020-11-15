@@ -12,10 +12,10 @@ private:
     static array<string, 9> allType = {"int",  "float", "double", "char",
                                        "bool", "void",  "string", "auto",
                                        "enum"};  // class is not a type
-    static array<string, 14> specifier = {
-        "signed", "unsigned", "long",      "short",    "static",
-        "extern", "const",    "inline",    "volatile", "restrict",
-        "public", "private",  "protected", "virtual"};
+    static array<string, 16> specifier = {
+        "signed",    "unsigned", "long",      "short",    "static", "extern",
+        "const",     "inline",   "volatile",  "restrict", "public", "private",
+        "protected", "virtual",  "constexpr", "explicit", "friend"};
 
 public:
     Type() = default;
