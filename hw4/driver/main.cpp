@@ -5,7 +5,7 @@
 int main()
 {
     try {
-        Lexer lexer(cin);
+        Lexer lexer;
         Token t;
         while (t = lexer.scan())
             std::cout << t << std::endl;

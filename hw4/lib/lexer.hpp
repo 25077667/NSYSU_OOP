@@ -6,11 +6,8 @@ using namespace std;
 
 class Lexer
 {
-    istream cursor;
-
 public:
     Lexer() = default;
-    Lexer(istream &_in) : cursor(_in) {}
     Token scan();
 };
 
