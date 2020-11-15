@@ -22,10 +22,10 @@ Token Lexer::scan()
         const auto isFound = make_pair(
             tagTable.find(string(biBytes.first)),
             tagTable.find(string(biBytes.first) + string(biBytes.second)));
-        if (isFound.)  // found
-            return isFound->second();
+        // if (isFound)  // found
+        return isFound->second();
 
     } else {
-        throw "End of file reached"
+        throw "End of file reached";
     }
 }
