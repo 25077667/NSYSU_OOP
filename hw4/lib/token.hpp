@@ -1,6 +1,5 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
-#include <ctype.h>
 #include <iostream>
 #include "type.hpp"
 #include "word.hpp"
@@ -9,9 +8,10 @@ using namespace std;
 
 class Token
 {
-    string token;
+    std::string token;
 
 public:
+    Token() = default;
     Token(string _token) : token(_token) {}
     friend ostream &operator<<(ostream &_out, const Token &_token);
     Token operator=(const Token &_token);
