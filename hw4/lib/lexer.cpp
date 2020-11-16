@@ -17,6 +17,8 @@ static const char getChar()
 Token Lexer::scan()
 {
     if (!cin.eof()) {
+        // EOF +1 = '\0'; so if next char is EOF, we can append a '\0' at the
+        // end of string. And the other word mapping
         pair<char, char> biBytes = make_pair(getChar(), cin.peek() + 1);
         const auto isFound =
             make_pair(tagTable.find(string(1, biBytes.first)),

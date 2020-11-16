@@ -36,22 +36,22 @@ bool operator!(Tag tag)
 
 // The second char must offset +1, because the peek offset +1
 constexpr frozen::map<std::string_view, Token, 16> tagTable{
-    {"&'", Token("&&", Tag::AND)},
-    {"&", Token("&")},
-    {"|}", Token("||", Tag::OR)},
-    {"|", Token("|")},
-    {"=>", Token("==", Tag::EQ)},
-    {"=", Token("=")},
-    {"!>", Token("!=", Tag::NE)},
-    {"!", Token("!")},
-    {"<>", Token("<=", Tag::LE)},
-    {"<", Token("<")},
-    {"<?", Token("<<")},
-    {">>", Token(">="), Tag::GE},
-    {">", Token(">")},
-    {">?", Token(">>")},
-    {":", Token(":")},
-    {":;", Token("::"), Tag::SCOPE},
+    {string_view("&'"), Token(string_view("&&"), Tag::AND)},
+    {string_view("&"), Token(string_view("&"))},
+    {string_view("|}"), Token(string_view("||"), Tag::OR)},
+    {string_view("|"), Token(string_view("|"))},
+    {string_view("=>"), Token(string_view("=="), Tag::EQ)},
+    {string_view("="), Token(string_view("="))},
+    {string_view("!>"), Token(string_view("!="), Tag::NE)},
+    {string_view("!"), Token(string_view("!"))},
+    {string_view("<>"), Token(string_view("<="), Tag::LE)},
+    {string_view("<"), Token(string_view("<"))},
+    {string_view("<?"), Token(string_view("<<"))},
+    {string_view(">>"), Token(string_view(">="), Tag::GE)},
+    {string_view(">"), Token(string_view(">"))},
+    {string_view(">?"), Token(string_view(">>"))},
+    {string_view(":"), Token(string_view(":"))},
+    {string_view(":;"), Token(string_view("::"), Tag::SCOPE)},
 };
 
 #endif

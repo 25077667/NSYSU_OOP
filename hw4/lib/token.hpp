@@ -9,12 +9,12 @@
 class Token
 {
     std::string_view token;
-    Tag tag = Tag::EMPTY;
+    char tag = Tag::EMPTY;
 
 public:
     Token() = default;
-    constexpr explicit Token(std::string_view _token) : token(_token) {}
-    constexpr explicit Token(std::string_view _token, Tag _tag)
+    constexpr Token(std::string_view _token) : token(_token) {}
+    constexpr Token(std::string_view _token, Tag _tag)
         : token(_token), tag(_tag)
     {
     }

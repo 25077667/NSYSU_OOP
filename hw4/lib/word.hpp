@@ -12,8 +12,11 @@ using namespace std;
 string getWord(string_view lexeme, Tag tag)
 {
     string word = string(lexeme);
-    if (!!tag)  // in the TAG
+    if (!!tag)  // in the TAG, except for EMPTY
         word = string(magic_enum::enum_name(tag));
+    Type typeMask(word);
+    // If is a type overwrite with type, else remain the origin
+    word = typeMask.getType();
     return word;
 }
 
