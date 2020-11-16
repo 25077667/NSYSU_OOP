@@ -25,6 +25,8 @@ enum class Tag : char {
     TRUE,
     WHILE,
     SCOPE,
+    MEMBER,
+    INVALID
 };
 
 bool operator!(Tag tag)

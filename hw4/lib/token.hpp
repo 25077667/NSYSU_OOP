@@ -37,23 +37,23 @@ ostream &operator<<(ostream &_out, const Token &_token)
 }
 
 // The second char must offset +1, because the peek offset +1
-constexpr frozen::map<std::string_view, Token, 16> tagTable{
-    {std::string_view("&'"), Token(std::string_view("&&"), Tag::AND)},
-    {std::string_view("&"), Token(std::string_view("&"))},
-    {std::string_view("|}"), Token(std::string_view("||"), Tag::OR)},
-    {std::string_view("|"), Token(std::string_view("|"))},
-    {std::string_view("=>"), Token(std::string_view("=="), Tag::EQ)},
-    {std::string_view("="), Token(std::string_view("="))},
-    {std::string_view("!>"), Token(std::string_view("!="), Tag::NE)},
-    {std::string_view("!"), Token(std::string_view("!"))},
-    {std::string_view("<>"), Token(std::string_view("<="), Tag::LE)},
-    {std::string_view("<"), Token(std::string_view("<"))},
-    {std::string_view("<?"), Token(std::string_view("<<"))},
-    {std::string_view(">>"), Token(std::string_view(">="), Tag::GE)},
-    {std::string_view(">"), Token(std::string_view(">"))},
-    {std::string_view(">?"), Token(std::string_view(">>"))},
-    {std::string_view(":"), Token(std::string_view(":"))},
-    {std::string_view(":;"), Token(std::string_view("::"), Tag::SCOPE)},
+constexpr frozen::map<string_view, Token, 16> tagTable{
+    {string_view("&'"), Token(string_view("&&"), Tag::AND)},
+    {string_view("&"), Token(string_view("&"))},
+    {string_view("|}"), Token(string_view("||"), Tag::OR)},
+    {string_view("|"), Token(string_view("|"))},
+    {string_view("=>"), Token(string_view("=="), Tag::EQ)},
+    {string_view("="), Token(string_view("="))},
+    {string_view("!>"), Token(string_view("!="), Tag::NE)},
+    {string_view("!"), Token(string_view("!"))},
+    {string_view("<>"), Token(string_view("<="), Tag::LE)},
+    {string_view("<"), Token(string_view("<"))},
+    {string_view("<?"), Token(string_view("<<"))},
+    {string_view(">>"), Token(string_view(">="), Tag::GE)},
+    {string_view(">"), Token(string_view(">"))},
+    {string_view(">?"), Token(string_view(">>"))},
+    {string_view(":"), Token(string_view(":"))},
+    {string_view(":;"), Token(string_view("::"), Tag::SCOPE)},
 };
 
 #endif
