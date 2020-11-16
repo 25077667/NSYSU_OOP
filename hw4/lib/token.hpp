@@ -9,7 +9,7 @@
 class Token
 {
     std::string_view token;
-    char tag = Tag::EMPTY;
+    Tag tag = Tag::EMPTY;
 
 public:
     Token() = default;
@@ -19,7 +19,7 @@ public:
     {
     }
     friend std::ostream &operator<<(std::ostream &_out, const Token &_token);
-    Token operator=(const Token &_token);
+    constexpr Token operator=(const Token &_token) { this->token = _token.token; this->tag = _token.tag; return *this; }
     operator bool() const { return !this->token.empty(); }
 };
 
