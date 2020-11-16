@@ -4,7 +4,6 @@
 #include <regex>
 #include "tag.hpp"
 #include "token.hpp"
-
 using namespace std;
 
 static const char getChar()

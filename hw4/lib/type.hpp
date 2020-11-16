@@ -1,8 +1,7 @@
 #ifndef TYPE_HPP
 #define TYPE_HPP
-#include <algorithm>
 #include <array>
-#include <iostream>
+#include <string_view>
 
 using namespace std;
 
@@ -25,17 +24,5 @@ public:
     string_view getType() { return this->__type; }
     operator bool() const { return __type == "BASIC" || __type == "SPECIFIER"; }
 };
-
-Type::Type(string_view _type)
-{
-    auto mux = make_pair(find(basic.begin(), basic.end(), _type),
-                         find(specifier.begin(), specifier.end(), _type));
-    if (mux.first != basic.end())
-        this->__type = "BASIC";
-    else if (mux.second != specifier.end())
-        this->__type = "SPECIFIER";
-    else
-        this->__type = _type;
-}
 
 #endif

@@ -29,9 +29,6 @@ enum class Tag : char {
     INVALID
 };
 
-bool operator!(Tag tag)
-{
-    return tag == static_cast<Tag>(0);
-}
+
 
 #endif

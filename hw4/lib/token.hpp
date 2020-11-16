@@ -8,8 +8,6 @@
 #include "word.hpp"
 using namespace std;
 
-extern string getWord(string_view lexeme, Tag tag);
-
 class Token
 {
     string_view token;
@@ -29,12 +27,6 @@ public:
     operator bool() const { return !this->token.empty(); }
 };
 
-ostream &operator<<(ostream &_out, const Token &_token)
-{
-    _out << "Token: " << (_token.token) << "\t("
-         << getWord(_token.token, _token.tag) << ")";
-    return _out;
-}
 
 // The second char must offset +1, because the peek offset +1
 constexpr frozen::map<string_view, Token, 16> tagTable{
