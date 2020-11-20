@@ -11,5 +11,13 @@ dep: lib/*.[ch]pp
 	$(CC) $(FLAGS) -c lib/token.cpp
 	$(CC) $(FLAGS) -c lib/lexer.cpp
 
+check: all
+	@echo "test1"
+	cat sample/test1 | ./main.elf > out1 2>&1
+	diff out1 sample/test1.out
+	@echo "test2"
+	cat sample/test2 | ./main.elf > out2 2>&1
+	diff out2 sample/test2.out
+
 clean:
-	rm -rf *.o *.elf
+	rm -rf *.o *.elf out1 out2
