@@ -55,7 +55,6 @@ Token Lexer::scan()
             make_pair(tagTable.find(string(1, biBytes.first)),
                       tagTable.find(string(1, biBytes.first) +
                                     string(1, biBytes.second)));
-        // cout << ">>>>>>>>>>>" << biBytes.first << biBytes.second << endl;
         // found in tagTable
         {
             if (inTagTable.first != tagTable.end()) {
@@ -93,7 +92,7 @@ Token Lexer::scan()
         if (isalnum(biBytes.first)) {  // Only comes alphabate in head
             string s = string(1, biBytes.first);
             char tmp;
-            while (cin >> tmp && isalnum(tmp)) {
+            while (cin.read(&tmp, 1) && isalnum(tmp)) {
                 s.push_back(tmp);
             }
             cin.putback(tmp);
