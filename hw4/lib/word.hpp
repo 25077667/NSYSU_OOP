@@ -7,6 +7,6 @@
 #include "tag.hpp"
 using namespace std;
 
-string getWord(string_view lexeme, Tag tag);
+string getWord(string lexeme, Tag tag);
 
 #endif

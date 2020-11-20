@@ -29,6 +29,4 @@ enum class Tag : char {
     INVALID
 };
 
-
-
 #endif

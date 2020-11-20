@@ -6,7 +6,8 @@ using namespace std;
 
 ostream &operator<<(ostream &_out, const Token &_token)
 {
-    _out << "Token: " << (_token.token) << "\t("
-         << getWord(_token.token, _token.tag) << ")";
+    // the string_view will change after "READ", but don;t know why.
+    string lexer(_token.token);
+    _out << "Token: " << lexer << "\t(" << getWord(lexer, _token.tag) << ")";
     return _out;
 }

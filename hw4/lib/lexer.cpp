@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <regex>
+#include <stdexcept>
 #include "tag.hpp"
 #include "token.hpp"
 using namespace std;
@@ -9,11 +10,11 @@ using namespace std;
 static const char getChar()
 {
     char in;
-    while (cin.read(&in, 1) && isspace(in))
-        ;  // skip white spaces
+    while (isspace(cin.peek()))
+        cin.ignore();  // skip white spaces
+    cin >> in;
     return in;
 }
-
 
 // prefix [+-]? is an operator, not in the number
 static inline bool is_hex_notation(string const &s)
@@ -52,6 +53,7 @@ Token Lexer::scan()
             make_pair(tagTable.find(string(1, biBytes.first)),
                       tagTable.find(string(1, biBytes.first) +
                                     string(1, biBytes.second)));
+        // cout << ">>>>>>>>>>>" << biBytes.first << biBytes.second << endl;
         // found in tagTable
         {
             if (inTagTable.first != tagTable.end()) {
@@ -66,6 +68,11 @@ Token Lexer::scan()
             string s;
             cin.putback(biBytes.first);
             cin >> s;  // will read until white space(but not store in `s`)
+
+            while (!isdigit(s.back())) {
+                cin.putback(s.back());
+                s.pop_back();
+            }
 
             if (is_number(s) || is_hex_notation(s) || is_float(s) ||
                 is_bin_notation(s))
@@ -95,6 +102,6 @@ Token Lexer::scan()
         return Token(string(1, biBytes.first));
 
     } else {
-        throw "End of file reached";
+        throw runtime_error("End of file reached");
     }
 }

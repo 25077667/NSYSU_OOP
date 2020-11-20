@@ -7,9 +7,9 @@ using namespace std;
 
 extern bool operator!(Tag tag);
 
-string getWord(string_view lexeme, Tag tag)
+string getWord(string lexeme, Tag tag)
 {
-    string word = string(lexeme);
+    string word(lexeme);
     if (!!tag)  // in the TAG, except for EMPTY
         word = string(magic_enum::enum_name(tag));
     Type typeMask(word);
