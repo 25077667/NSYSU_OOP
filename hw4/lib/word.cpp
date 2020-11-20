@@ -1,5 +1,4 @@
 #include "word.hpp"
-#include <iostream>
 #include "magic_enum.hpp"
 #include "tag.hpp"
 #include "type.hpp"
@@ -9,11 +8,12 @@ extern bool operator!(Tag tag);
 
 string getWord(string lexeme, Tag tag)
 {
-    string word(lexeme);
-    if (!!tag)  // in the TAG, except for EMPTY
-        word = string(magic_enum::enum_name(tag));
-    Type typeMask(word);
+    Type typeMask(lexeme.c_str());
     // If is a type overwrite with type, else remain the origin
-    word = typeMask.getType();
-    return word;
+    if (typeMask)
+        return string(typeMask.getType());
+    else if (!!tag)  // in the TAG, except for EMPTY
+        return string(magic_enum::enum_name(tag));
+    else
+        return lexeme;
 }

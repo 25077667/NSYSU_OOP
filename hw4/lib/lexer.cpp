@@ -12,6 +12,8 @@ static const char getChar()
     char in;
     while (isspace(cin.peek()))
         cin.ignore();  // skip white spaces
+    if (cin.eof())
+        throw runtime_error("End of file reached");
     cin >> in;
     return in;
 }
@@ -95,9 +97,12 @@ Token Lexer::scan()
                 s.push_back(tmp);
             }
             cin.putback(tmp);
-            if (!s.empty()) {
+
+            auto isWordTag = tagTable.find(s);
+            if (isWordTag != tagTable.end())
+                return isWordTag->second;
+            else if (!s.empty())
                 return Token(string_view(s), Tag::ID);
-            }
         }
         return Token(string(1, biBytes.first));
 

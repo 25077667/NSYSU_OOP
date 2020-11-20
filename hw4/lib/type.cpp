@@ -1,6 +1,5 @@
 #include "type.hpp"
 #include <algorithm>
-#include <array>
 #include <string_view>
 #include <utility>
 using namespace std;

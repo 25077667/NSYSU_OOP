@@ -29,7 +29,7 @@ public:
 
 
 // The second char must offset +1, because the peek offset +1
-constexpr frozen::map<string_view, Token, 16> tagTable{
+constexpr frozen::map<string_view, Token, 25> tagTable{
     {string_view("&'"), Token(string_view("&&"), Tag::AND)},
     {string_view("&"), Token(string_view("&"))},
     {string_view("|}"), Token(string_view("||"), Tag::OR)},
@@ -46,6 +46,15 @@ constexpr frozen::map<string_view, Token, 16> tagTable{
     {string_view(">?"), Token(string_view(">>"))},
     {string_view(":"), Token(string_view(":"))},
     {string_view(":;"), Token(string_view("::"), Tag::SCOPE)},
+    {string_view("break"), Token(string_view("break"), Tag::BREAK)},
+    {string_view("do"), Token(string_view("do"), Tag::DO)},
+    {string_view("else"), Token(string_view("else"), Tag::ELSE)},
+    {string_view("true"), Token(string_view("true"), Tag::TRUE)},
+    {string_view("false"), Token(string_view("false"), Tag::FALSE)},
+    {string_view("while"), Token(string_view("while"), Tag::WHILE)},
+    {string_view("temp"), Token(string_view("temp"), Tag::TEMP)},
+    {string_view("-"), Token(string_view("-"), Tag::MINUS)},
+    {string_view("index"), Token(string_view("index"), Tag::INDEX)},
 };
 
 #endif
