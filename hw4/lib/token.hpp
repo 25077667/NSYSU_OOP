@@ -53,8 +53,8 @@ constexpr frozen::map<string_view, Token, 25> tagTable{
     {string_view("false"), Token(string_view("false"), Tag::FALSE)},
     {string_view("while"), Token(string_view("while"), Tag::WHILE)},
     {string_view("temp"), Token(string_view("temp"), Tag::TEMP)},
-    {string_view("-"), Token(string_view("-"), Tag::MINUS)},
     {string_view("index"), Token(string_view("index"), Tag::INDEX)},
+    {string_view("if"), Token(string_view("if"), Tag::IF)},
 };
 
 #endif
