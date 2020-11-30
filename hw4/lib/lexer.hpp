@@ -3,7 +3,7 @@
 #include "token.hpp"
 using namespace std;
 
-class Lexer
+class Lexer : public Token
 {
 public:
     Lexer() = default;
