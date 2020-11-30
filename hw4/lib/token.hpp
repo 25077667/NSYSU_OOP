@@ -8,7 +8,7 @@
 #include "word.hpp"
 using namespace std;
 
-class Token
+class Token : public Type
 {
     string_view token;
     Tag tag = Tag::EMPTY;
