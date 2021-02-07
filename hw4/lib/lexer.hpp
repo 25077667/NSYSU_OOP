@@ -11,7 +11,7 @@ class Lexer : public istream
     istream is;
     vector<Token> v_tok;
     virtual void set_scan(std::istream &_is) { is = move(_is); }
-    scan();
+    void scan();
 
 public:
     Lexer() = delete;

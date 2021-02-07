@@ -3,6 +3,7 @@
 #include <iostream>
 #include <regex>
 #include <stdexcept>
+#include <map>
 #include "tag.hpp"
 #include "token.hpp"
 using namespace std;
