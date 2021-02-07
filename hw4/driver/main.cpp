@@ -5,10 +5,9 @@
 int main()
 {
     try {
-        Lexer lexer;
-        Token t;
-        while (t = lexer.scan())
-            std::cout << t << std::endl;
+        Lexer lex(cin);
+        for_each(lex.begin(), next(lex.begin(), lex.size()),
+                 [](Token s) { cout << s << endl; });
     } catch (const std::exception &e) {
         std::cerr << e.what();
     }

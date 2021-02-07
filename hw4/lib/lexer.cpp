@@ -52,7 +52,7 @@ static inline bool is_member(string const &s)
     return regex_match(s.c_str(), regex(rePattern.at("MEMBER")));
 }
 
-Token Lexer::scan()
+void Lexer::scan()
 {
     if (!cin.eof()) {
         // EOF +1 = '\0'; so if next char is EOF, we can append a '\0' at the
