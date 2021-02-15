@@ -26,6 +26,9 @@ enum class Tag : char {
     WHILE,
     SCOPE,
     MEMBER,
+    OP,
+    TYPE,
+    SPECIFIER,
     INVALID
 };
 

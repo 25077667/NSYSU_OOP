@@ -6,7 +6,8 @@ all: dep
 
 dep: lib/*.[ch]pp
 	$(CC) $(FLAGS) -c lib/tag.cpp
-	$(CC) $(FLAGS) -c lib/word.cpp
+	$(CC) $(FLAGS) -c lib/num.cpp
+	$(CC) $(FLAGS) -c lib/op.cpp
 	$(CC) $(FLAGS) -c lib/type.cpp
 	$(CC) $(FLAGS) -c lib/token.cpp
 	$(CC) $(FLAGS) -c lib/lexer.cpp

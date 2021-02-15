@@ -2,10 +2,13 @@
 #define TYPE_HPP
 #include <array>
 #include <string_view>
+#include "token.hpp"
 
 using namespace std;
 
-class Type
+class Token;
+
+class Type : public Token
 {
 private:
     string_view __type;
@@ -20,6 +23,7 @@ private:
 public:
     Type() = delete;
     Type(string_view _type);
+    Type(string_view _type, Tag _tag);
     ~Type() = default;
     string_view getType() { return this->__type; }
     operator bool() const { return __type == "BASIC" || __type == "SPECIFIER"; }

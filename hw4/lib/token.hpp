@@ -4,8 +4,6 @@
 #include <string_view>
 #include "frozen/map.h"
 #include "tag.hpp"
-#include "type.hpp"
-#include "word.hpp"
 using namespace std;
 
 class Token
@@ -13,10 +11,18 @@ class Token
     string_view token;
     Tag tag = Tag::EMPTY;
 
+protected:
+    void tag_mutator(Tag _tag) { tag = _tag; }
+    void tok_mutator(string_view _tok) { token = _tok; }
+
 public:
     Token() = default;
     constexpr Token(string_view _token) : token(_token) {}
     constexpr Token(string_view _token, Tag _tag) : token(_token), tag(_tag) {}
+    constexpr Token(const Token &&_token) : token(_token.token), tag(_token.tag)
+    {
+    }
+    constexpr Token(const Token &) = default;
     friend ostream &operator<<(ostream &_out, const Token &_token);
     constexpr Token operator=(const Token &_token)
     {

@@ -4,148 +4,98 @@
 #include <map>
 #include <regex>
 #include <stdexcept>
+#include "num.hpp"
+#include "op.hpp"
 #include "tag.hpp"
 #include "token.hpp"
+#include "type.hpp"
 using namespace std;
 
-static const map<string, string> rePattern = {
-    {string("HEX"), string("^0[xX][0-9A-Fa-f]+$")},
-    {string("BIN"), string("^0[bB][0-9A-Fa-f]+$")},
-    {string("NUM"), string("^[0-9]+(([uU]?[lL]?)|([lL]?[uU]?))$")},
-    {string("FLOAT"), string("^([0-9]+(\\.[0-9]*)?|\\.[0-9]+)[fFlL]?$")},
-    {string("MEMBER"), string("^\\.[a-zA-Z][0-9a-zA-Z]+$")},
-};
-
-static const char getChar(istream &is)
+static const char getChar(istream *is_ptr)
 {
     char in;
-    while (isspace(is.peek()))
-        is.ignore();  // skip white spaces
-    if (is.eof())
+    while (isspace(is_ptr->peek()))
+        is_ptr->ignore();  // skip white spaces
+    if (is_ptr->eof())
         throw runtime_error("End of file reached");
-    is.read(&in, 1);
+    is_ptr->read(&in, 1);
     return in;
 }
 
 // prefix [+-]? is an operator, not a number
-static inline bool is_hex_notation(string const &s)
+static inline bool is_number(const string_view &s)
 {
-    return regex_match(s.c_str(), regex(rePattern.at("HEX")));
+    return regex_match(s.data(), regex("^[0-9]+(([uU]?[lL]?)|([lL]?[uU]?))$"));
 }
 
-static inline bool is_bin_notation(string const &s)
+static inline bool is_float(const string_view &s)
 {
-    return regex_match(s.c_str(), regex(rePattern.at("BIN")));
+    return regex_match(s.data(),
+                       regex("^([0-9]+(\\.[0-9]*)?|\\.[0-9]+)[fFlL]?$"));
 }
 
-static inline bool is_number(string const &s)
+static string_view tok_getter(istream *is_ptr, char forward_peek)
 {
-    return regex_match(s.c_str(), regex(rePattern.at("NUM")));
+    char head = is_ptr->peek();
+
+    if (!(isalnum(head) || (head == '.' && isalpha(forward_peek)) ||
+          head == '_')) {
+        is_ptr->read(&head, 1);
+        return string_view(&head);  // Is a single-character operator
+    }
+
+    auto is_match = (isalpha(head))
+                        ? ([](int c) { return bool(isalnum(c) || c == '_'); })
+                        : ([](int c) { return bool(isdigit(c) || c == '.'); });
+
+    string s;
+    do {
+        s.push_back(head);
+        is_ptr->read(&head, 1);  // read the peeked char
+        head = is_ptr->peek();
+    } while (is_match(head));
+    return string_view(s.c_str());
 }
 
-static inline bool is_float(string const &s)
+static unique_ptr<Token> tok_mux(const string_view &tok)
 {
-    return regex_match(s.c_str(), regex(rePattern.at("FLOAT")));
+    if (is_number(tok) || is_float(tok))
+        return make_unique<Num>(tok);  // Number
+    else if (Type(tok))
+        return make_unique<Type>(tok, Tag::TYPE);  // Type
+    else if (isalpha(*tok.begin()))
+        return make_unique<Token>(tok, Tag::ID);  // Variable
+    else
+        return make_unique<Operator>(tok, Tag::OP);  // Operator
 }
-
-static inline bool is_member(string const &s)
-{
-    return regex_match(s.c_str(), regex(rePattern.at("MEMBER")));
-}
-
-static string_view tok_getter(char head_c, istream &is)
-{
-    if ()
-}
-
-static Token tok_mux(string_view tok) {}
 
 void Lexer::scan()
 {
-    while (!is.eof()) {
+    while (!is_ptr->eof()) {
         // EOF +1 = '\0'; so if next char is EOF, we can append a '\0' at the
         // end of string.
         // And the ctor of pair is backed-evaluated the arguments.
-        pair<char, char> biBytes(is.peek() + 1, getChar(is));
+        const pair<char, char> biBytes(is_ptr->peek() + 1, getChar(is_ptr));
         const auto inTagTable =
             make_pair(tagTable.find(string_view(&biBytes.second)),
                       tagTable.find([biBytes]() {
-                          char buf[2] = {biBytes.second, biBytes.first};
+                          char buf[3] = {biBytes.second, biBytes.first, 0};
                           return string_view(buf);
                       }()));
 
         // Found in tag table
         if (inTagTable.first != tagTable.end() ||
             inTagTable.second != tagTable.end()) {
-            is.ignore();  // don't care the `&var` case
-            v_tok.push_back(((inTagTable.second != tagTable.end())
-                                 ? inTagTable.second->second
-                                 : inTagTable.first->second));
+            is_ptr->ignore();  // don't care the `&var` case
+            v_tok.push_back(
+                make_unique<Operator>((inTagTable.second != tagTable.end())
+                                          ? inTagTable.second->second
+                                          : inTagTable.first->second));
             continue;
         }
-
-        auto tok = tok_getter(biBytes.second, is);
+        is_ptr->putback(biBytes.second);
+        auto tok = tok_getter(is_ptr, biBytes.first - 1);
         v_tok.push_back(tok_mux(tok));
     }
     cerr << "End of file reached" << endl;
 }
-
-// void Lexer::scan()
-// {
-//     if (!cin.eof()) {
-
-//         // found in tagTable
-//         {
-//             // Match two char first
-//             if (inTagTable.second != tagTable.end()) {
-//                 cin.ignore();  // ignore a byte(which peeked)
-//                 return inTagTable.second->second;
-//             } else if (inTagTable.first != tagTable.end()) {
-//                 cin.ignore();  // ignore a byte(which peeked)
-//                 return inTagTable.first->second;
-//             }
-//         }
-//         if (isdigit(biBytes.first) || biBytes.first == '.') {
-//             string s;
-//             cin.putback(biBytes.first);
-
-//             char tmp;
-//             while (cin.read(&tmp, 1) && isdigit(tmp)) {
-//                 s.push_back(tmp);
-//             }
-//             cin.putback(tmp);
-
-//             if (is_number(s) || is_hex_notation(s) || is_float(s) ||
-//                 is_bin_notation(s))
-//                 return Token(string_view(s), Tag::NUM);
-//             else if (is_member(s)) {  //.data
-//                 reverse(s.begin(), s.end());
-//                 s.pop_back();
-//                 while (!s.empty()) {
-//                     cin.putback(s.back());
-//                     s.pop_back();
-//                 }
-//                 return Token(string_view("."), Tag::MEMBER);
-//             } else
-//                 return Token(string_view(s), Tag::INVALID);
-//         }
-//         if (isalnum(biBytes.first)) {  // Only comes alphabate in head
-//             string s = string(1, biBytes.first);
-//             char tmp;
-//             while (cin.read(&tmp, 1) && isalnum(tmp)) {
-//                 s.push_back(tmp);
-//             }
-//             cin.putback(tmp);
-
-//             auto isWordTag = tagTable.find(s);
-//             if (isWordTag != tagTable.end())
-//                 return isWordTag->second;
-//             else if (!s.empty())
-//                 return Token(string_view(s), Tag::ID);
-//         }
-//         return Token(string(1, biBytes.first));
-
-//     } else {
-//         throw runtime_error("");
-//     }
-// }
