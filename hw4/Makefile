@@ -1,5 +1,5 @@
 CC=g++
-FLAGS=-Wall -std=c++2a -O3 -Os
+FLAGS=-Wall -std=c++20 -Ofast
 
 all: dep 
 	$(CC) $(FLAGS) *.o driver/main.cpp -o main.elf

@@ -11,7 +11,6 @@ class Lexer
 {
     istream *is_ptr;
     vector<unique_ptr<Token>> v_tok;
-    void scan();
 
 public:
     Lexer() = delete;
@@ -19,6 +18,7 @@ public:
     decltype(auto) begin() const { return v_tok.begin(); }
     decltype(auto) end() const { return v_tok.end(); }
     auto size() const { return v_tok.size(); }
+    void scan();
 };
 
 #endif

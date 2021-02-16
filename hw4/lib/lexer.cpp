@@ -97,5 +97,4 @@ void Lexer::scan()
         auto tok = tok_getter(is_ptr, biBytes.first - 1);
         v_tok.push_back(tok_mux(tok));
     }
-    cerr << "End of file reached" << endl;
 }
