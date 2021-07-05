@@ -95,6 +95,7 @@ void Lexer::scan()
         }
         is_ptr->putback(biBytes.second);
         auto tok = tok_getter(is_ptr, biBytes.first - 1);
+        cout << string(tok) << endl;
         v_tok.push_back(tok_mux(tok));
     }
 }
