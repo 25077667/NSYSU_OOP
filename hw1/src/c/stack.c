@@ -37,7 +37,6 @@ void push(struct stack *this, int x)
         curr->me->next = new_ll_stack;
 
         /* Initialize old stack */
-        memset(this->stk, 0, 100 * sizeof(int));
         this->sp = -1;
     }
 
@@ -76,7 +75,7 @@ struct stack *new_stack()
     stk->sp = -1;
 
     pool_t *tmp = stack_pool;
-    stack_pool = calloc(1, sizeof(pool_t));
+    stack_pool = malloc(sizeof(pool_t));
     stack_pool->me = malloc(sizeof(ll_stack_t));
     stack_pool->prev = tmp;
 
