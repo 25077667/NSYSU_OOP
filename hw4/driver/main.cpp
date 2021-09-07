@@ -6,9 +6,8 @@ int main()
 {
     try {
         Lexer lexer;
-        Token t;
-        while (t = lexer.scan())
-            std::cout << t << std::endl;
+        while (auto t = lexer.scan())
+            std::cout << t->to_string() << std::endl;
     } catch (const std::exception &e) {
         std::cerr << e.what();
     }

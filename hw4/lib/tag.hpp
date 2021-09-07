@@ -1,10 +1,11 @@
 #ifndef TAG_HPP
 #define TAG_HPP
+#include <memory>
 #include <string_view>
+#include <unordered_map>
 
-enum class Tag : char {
-    EMPTY,
-    AND,
+enum class Tag : short {
+    AND = 256,
     BASIC,
     BREAK,
     DO,
@@ -24,8 +25,8 @@ enum class Tag : char {
     TEMP,
     TRUE,
     WHILE,
-    SCOPE,
-    MEMBER,
+    LSHIFT,
+    RSHIFT,
     INVALID
 };
 

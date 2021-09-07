@@ -1,15 +1,11 @@
 CC=g++
-FLAGS=-Wall -std=c++2a -O3 -Os
+FLAGS=-Wall -std=c++2a -Ofast -Os
 
 all: dep 
 	$(CC) $(FLAGS) *.o driver/main.cpp -o main.elf
 
 dep: lib/*.[ch]pp
-	$(CC) $(FLAGS) -c lib/tag.cpp
-	$(CC) $(FLAGS) -c lib/word.cpp
-	$(CC) $(FLAGS) -c lib/type.cpp
-	$(CC) $(FLAGS) -c lib/token.cpp
-	$(CC) $(FLAGS) -c lib/lexer.cpp
+	$(CC) $(FLAGS) -c lib/tag.hpp lib/word.cpp lib/type.cpp lib/token.cpp lib/lexer.cpp lib/num.cpp
 
 check: all
 	@echo "test1"

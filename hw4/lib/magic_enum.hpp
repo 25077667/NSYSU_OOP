@@ -5,11 +5,11 @@
 // | |  | | (_| | (_| | | (__  | |____| | | | |_| | | | | | | | |____|_|   |_|
 // |_|  |_|\__,_|\__, |_|\___| |______|_| |_|\__,_|_| |_| |_|  \_____|
 //                __/ | https://github.com/Neargye/magic_enum
-//               |___/  version 0.7.0
+//               |___/  version 0.7.3
 //
 // Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2019 - 2020 Daniil Goncharov <neargye@gmail.com>.
+// Copyright (c) 2019 - 2021 Daniil Goncharov <neargye@gmail.com>.
 //
 // Permission is hereby  granted, free of charge, to any  person obtaining a copy
 // of this software and associated  documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@
 
 #define MAGIC_ENUM_VERSION_MAJOR 0
 #define MAGIC_ENUM_VERSION_MINOR 7
-#define MAGIC_ENUM_VERSION_PATCH 0
+#define MAGIC_ENUM_VERSION_PATCH 3
 
 #include <array>
 #include <cassert>
@@ -44,6 +44,10 @@
 #include <limits>
 #include <type_traits>
 #include <utility>
+
+#if defined(MAGIC_ENUM_CONFIG_FILE)
+#include MAGIC_ENUM_CONFIG_FILE
+#endif
 
 #if !defined(MAGIC_ENUM_USING_ALIAS_OPTIONAL)
 #include <optional>
@@ -62,7 +66,9 @@
 #  pragma GCC diagnostic ignored "-Wmaybe-uninitialized" // May be used uninitialized 'return {};'.
 #elif defined(_MSC_VER)
 #  pragma warning(push)
-#  pragma warning(disable : 26495) // Variable 'static_string<N>::chars' is uninitialized.
+#  pragma warning(disable : 26495) // Variable 'static_string<N>::chars_' is uninitialized.
+#  pragma warning(disable : 28020) // Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value.
+#  pragma warning(disable : 26451) // The expression '0<=_Param_(1)&&_Param_(1)<=1-1' is not true at this call.
 #endif
 
 // Checks magic_enum compiler compatibility.
@@ -95,22 +101,21 @@ namespace magic_enum {
 #if defined(MAGIC_ENUM_USING_ALIAS_OPTIONAL)
 MAGIC_ENUM_USING_ALIAS_OPTIONAL
 #else
-template <typename T>
-using optional = std::optional<T>;
+using std::optional;
 #endif
 
 // If need another string_view type, define the macro MAGIC_ENUM_USING_ALIAS_STRING_VIEW.
 #if defined(MAGIC_ENUM_USING_ALIAS_STRING_VIEW)
 MAGIC_ENUM_USING_ALIAS_STRING_VIEW
 #else
-using string_view = std::string_view;
+using std::string_view;
 #endif
 
 // If need another string type, define the macro MAGIC_ENUM_USING_ALIAS_STRING.
 #if defined(MAGIC_ENUM_USING_ALIAS_STRING)
 MAGIC_ENUM_USING_ALIAS_STRING
 #else
-using string = std::string;
+using std::string;
 #endif
 
 namespace customize {
@@ -134,7 +139,7 @@ static_assert(MAGIC_ENUM_RANGE_MAX < (std::numeric_limits<std::int16_t>::max)(),
 
 static_assert(MAGIC_ENUM_RANGE_MAX > MAGIC_ENUM_RANGE_MIN, "MAGIC_ENUM_RANGE_MAX must be greater than MAGIC_ENUM_RANGE_MIN.");
 
-// If need cunstom names for enum, add specialization enum_name for necessary enum type.
+// If need custom names for enum, add specialization enum_name for necessary enum type.
 template <typename E>
 constexpr string_view enum_name(E) noexcept {
   static_assert(std::is_enum_v<E>, "magic_enum::customize::enum_name requires enum type.");
@@ -154,13 +159,20 @@ struct supported
     : std::false_type {};
 #endif
 
+struct char_equal_to {
+  constexpr bool operator()(char lhs, char rhs) const noexcept {
+    return lhs == rhs;
+  }
+};
+
 template <std::size_t N>
-struct static_string {
+class static_string {
+ public:
   constexpr explicit static_string(string_view str) noexcept : static_string{str, std::make_index_sequence<N>{}} {
     assert(str.size() == N);
   }
 
-  constexpr const char* data() const noexcept { return chars.data(); }
+  constexpr const char* data() const noexcept { return chars_; }
 
   constexpr std::size_t size() const noexcept { return N; }
 
@@ -168,13 +180,14 @@ struct static_string {
 
  private:
   template <std::size_t... I>
-  constexpr static_string(string_view str, std::index_sequence<I...>) noexcept : chars{{str[I]..., '\0'}} {}
+  constexpr static_string(string_view str, std::index_sequence<I...>) noexcept : chars_{str[I]..., '\0'} {}
 
-  const std::array<char, N + 1> chars;
+  char chars_[N + 1];
 };
 
 template <>
-struct static_string<0> {
+class static_string<0> {
+ public:
   constexpr explicit static_string(string_view) noexcept {}
 
   constexpr const char* data() const noexcept { return nullptr; }
@@ -184,17 +197,14 @@ struct static_string<0> {
   constexpr operator string_view() const noexcept { return {}; }
 };
 
-struct char_equal_to {
-  constexpr bool operator()(char lhs, char rhs) const noexcept {
-    return lhs == rhs;
-  }
-};
-
 constexpr string_view pretty_name(string_view name) noexcept {
   for (std::size_t i = name.size(); i > 0; --i) {
     if (!((name[i - 1] >= '0' && name[i - 1] <= '9') ||
           (name[i - 1] >= 'a' && name[i - 1] <= 'z') ||
           (name[i - 1] >= 'A' && name[i - 1] <= 'Z') ||
+#if defined(MAGIC_ENUM_ENABLE_NONASCII)
+          (name[i - 1] & 0x80) ||
+#endif
           (name[i - 1] == '_'))) {
       name.remove_prefix(i);
       break;
@@ -203,6 +213,9 @@ constexpr string_view pretty_name(string_view name) noexcept {
 
   if (name.size() > 0 && ((name.front() >= 'a' && name.front() <= 'z') ||
                           (name.front() >= 'A' && name.front() <= 'Z') ||
+#if defined(MAGIC_ENUM_ENABLE_NONASCII)
+                          (name.front() & 0x80) ||
+#endif
                           (name.front() == '_'))) {
     return name;
   }
@@ -214,11 +227,12 @@ constexpr std::size_t find(string_view str, char c) noexcept {
 #if defined(__clang__) && __clang_major__ < 9 && defined(__GLIBCXX__) || defined(_MSC_VER) && _MSC_VER < 1920 && !defined(__clang__)
 // https://stackoverflow.com/questions/56484834/constexpr-stdstring-viewfind-last-of-doesnt-work-on-clang-8-with-libstdc
 // https://developercommunity.visualstudio.com/content/problem/360432/vs20178-regression-c-failed-in-test.html
-  constexpr auto workaroung = true;
+  constexpr bool workaround = true;
 #else
-  constexpr auto workaroung = false;
+  constexpr bool workaround = false;
 #endif
-  if constexpr (workaroung) {
+
+  if constexpr (workaround) {
     for (std::size_t i = 0; i < str.size(); ++i) {
       if (str[i] == c) {
         return i;
@@ -231,19 +245,23 @@ constexpr std::size_t find(string_view str, char c) noexcept {
   }
 }
 
+template <typename T, std::size_t N, std::size_t... I>
+constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&a)[N], std::index_sequence<I...>) {
+  return {{a[I]...}};
+}
+
 template <typename BinaryPredicate>
 constexpr bool cmp_equal(string_view lhs, string_view rhs, BinaryPredicate&& p) noexcept(std::is_nothrow_invocable_r_v<bool, BinaryPredicate, char, char>) {
 #if defined(_MSC_VER) && _MSC_VER < 1920 && !defined(__clang__)
   // https://developercommunity.visualstudio.com/content/problem/360432/vs20178-regression-c-failed-in-test.html
   // https://developercommunity.visualstudio.com/content/problem/232218/c-constexpr-string-view.html
-  constexpr auto workaroung = true;
+  constexpr bool workaround = true;
 #else
-  constexpr auto workaroung = false;
+  constexpr bool workaround = false;
 #endif
-  if constexpr (std::is_same_v<std::decay_t<BinaryPredicate>, char_equal_to> && !workaroung) {
-    static_cast<void>(p);
-    return lhs == rhs;
-  } else {
+  constexpr bool custom_predicate = std::negation_v<std::is_same<std::decay_t<BinaryPredicate>, char_equal_to>>;
+
+  if constexpr (custom_predicate || workaround) {
     if (lhs.size() != rhs.size()) {
       return false;
     }
@@ -256,6 +274,10 @@ constexpr bool cmp_equal(string_view lhs, string_view rhs, BinaryPredicate&& p) 
     }
 
     return true;
+  } else {
+    static_cast<void>(p);
+
+    return lhs == rhs;
   }
 }
 
@@ -266,6 +288,10 @@ constexpr bool cmp_less(L lhs, R rhs) noexcept {
   if constexpr (std::is_signed_v<L> == std::is_signed_v<R>) {
     // If same signedness (both signed or both unsigned).
     return lhs < rhs;
+  } else if constexpr (std::is_same_v<L, bool>) { // bool special case due to msvc's C4804, C4018
+      return static_cast<R>(lhs) < rhs;
+  } else if constexpr (std::is_same_v<R, bool>) { // bool special case due to msvc's C4804, C4018
+      return lhs < static_cast<L>(rhs);
   } else if constexpr (std::is_signed_v<R>) {
     // If 'right' is negative, then result is 'false', otherwise cast & compare.
     return rhs > 0 && lhs < static_cast<std::make_unsigned_t<R>>(rhs);
@@ -347,6 +373,17 @@ constexpr bool is_valid() noexcept {
   return n<E, static_cast<E>(V)>().size() != 0;
 }
 
+template <typename E, int O, bool IsFlags = false, typename U = std::underlying_type_t<E>>
+constexpr E value(std::size_t i) noexcept {
+  static_assert(is_enum_v<E>, "magic_enum::detail::value requires enum type.");
+
+  if constexpr (IsFlags) {
+    return static_cast<E>(U{1} << static_cast<U>(static_cast<int>(i) + O));
+  } else {
+    return static_cast<E>(static_cast<int>(i) + O);
+  }
+}
+
 template <typename E, bool IsFlags, typename U = std::underlying_type_t<E>>
 constexpr int reflected_min() noexcept {
   static_assert(is_enum_v<E>, "magic_enum::detail::reflected_min requires enum type.");
@@ -358,10 +395,11 @@ constexpr int reflected_min() noexcept {
     static_assert(lhs > (std::numeric_limits<std::int16_t>::min)(), "magic_enum::enum_range requires min must be greater than INT16_MIN.");
     constexpr auto rhs = (std::numeric_limits<U>::min)();
 
-    if constexpr (cmp_less(lhs, rhs)) {
-      return rhs;
-    } else {
+    if constexpr (cmp_less(rhs, lhs)) {
+      static_assert(!is_valid<E, value<E, lhs - 1, IsFlags>(0)>(), "magic_enum::enum_range detects enum value smaller than min range size.");
       return lhs;
+    } else {
+      return rhs;
     }
   }
 }
@@ -378,6 +416,7 @@ constexpr int reflected_max() noexcept {
     constexpr auto rhs = (std::numeric_limits<U>::max)();
 
     if constexpr (cmp_less(lhs, rhs)) {
+      static_assert(!is_valid<E, value<E, lhs + 1, IsFlags>(0)>(), "magic_enum::enum_range detects enum value larger than max range size.");
       return lhs;
     } else {
       return rhs;
@@ -391,45 +430,44 @@ inline constexpr auto reflected_min_v = reflected_min<E, IsFlags>();
 template <typename E, bool IsFlags = false>
 inline constexpr auto reflected_max_v = reflected_max<E, IsFlags>();
 
-template <typename E, int O, bool IsFlags = false, typename U = std::underlying_type_t<E>>
-constexpr E value(std::size_t i) noexcept {
-  static_assert(is_enum_v<E>, "magic_enum::detail::value requires enum type.");
-
-  if constexpr (IsFlags) {
-    return static_cast<E>(U{1} << static_cast<U>(static_cast<int>(i) + O));
-  } else {
-    return static_cast<E>(static_cast<int>(i) + O);
+template <std::size_t N>
+constexpr std::size_t values_count(const bool (&valid)[N]) noexcept {
+  auto count = std::size_t{0};
+  for (std::size_t i = 0; i < N; ++i) {
+    if (valid[i]) {
+      ++count;
+    }
   }
+
+  return count;
 }
 
 template <typename E, bool IsFlags, int Min, std::size_t... I>
 constexpr auto values(std::index_sequence<I...>) noexcept {
   static_assert(is_enum_v<E>, "magic_enum::detail::values requires enum type.");
-  constexpr std::array<bool, sizeof...(I)> valid{{is_valid<E, value<E, Min, IsFlags>(I)>()...}};
-  constexpr std::size_t count = [](decltype((valid)) valid_) constexpr noexcept -> std::size_t {
-    auto count_ = std::size_t{0};
-    for (std::size_t i_ = 0; i_ < valid_.size(); ++i_) {
-      if (valid_[i_]) {
-        ++count_;
+  constexpr bool valid[sizeof...(I)] = {is_valid<E, value<E, Min, IsFlags>(I)>()...};
+  constexpr std::size_t count = values_count(valid);
+
+  if constexpr (count > 0) {
+    E values[count] = {};
+    for (std::size_t i = 0, v = 0; v < count; ++i) {
+      if (valid[i]) {
+        values[v++] = value<E, Min, IsFlags>(i);
       }
     }
-    return count_;
-  }(valid);
 
-  std::array<E, count> values{};
-  for (std::size_t i = 0, v = 0; v < count; ++i) {
-    if (valid[i]) {
-      values[v++] = value<E, Min, IsFlags>(i);
-    }
+    return to_array(values, std::make_index_sequence<count>{});
+  } else {
+    return std::array<E, 0>{};
   }
-
-  return values;
 }
 
 template <typename E, bool IsFlags, typename U = std::underlying_type_t<E>>
 constexpr auto values() noexcept {
   static_assert(is_enum_v<E>, "magic_enum::detail::values requires enum type.");
-  constexpr auto range_size = reflected_max_v<E, IsFlags> - reflected_min_v<E, IsFlags> + 1;
+  constexpr auto min = reflected_min_v<E, IsFlags>;
+  constexpr auto max = reflected_max_v<E, IsFlags>;
+  constexpr auto range_size = max - min + 1;
   static_assert(range_size > 0, "magic_enum::enum_range requires valid size.");
   static_assert(range_size < (std::numeric_limits<std::uint16_t>::max)(), "magic_enum::enum_range requires valid size.");
 
@@ -446,10 +484,10 @@ template <typename E, bool IsFlags = false>
 inline constexpr auto count_v = values_v<E, IsFlags>.size();
 
 template <typename E, bool IsFlags = false, typename U = std::underlying_type_t<E>>
-inline constexpr auto min_v = static_cast<U>(values_v<E, IsFlags>.front());
+inline constexpr auto min_v = (count_v<E, IsFlags> > 0) ? static_cast<U>(values_v<E, IsFlags>.front()) : U{0};
 
 template <typename E, bool IsFlags = false, typename U = std::underlying_type_t<E>>
-inline constexpr auto max_v = static_cast<U>(values_v<E, IsFlags>.back());
+inline constexpr auto max_v = (count_v<E, IsFlags> > 0) ? static_cast<U>(values_v<E, IsFlags>.back()) : U{0};
 
 template <typename E, bool IsFlags, typename U = std::underlying_type_t<E>>
 constexpr std::size_t range_size() noexcept {
@@ -781,8 +819,8 @@ template <typename E>
 // Checks whether enum contains enumerator with such name.
 template <typename E, typename BinaryPredicate>
 [[nodiscard]] constexpr auto enum_contains(string_view value, BinaryPredicate p) noexcept(std::is_nothrow_invocable_r_v<bool, BinaryPredicate, char, char>) -> detail::enable_if_enum_t<E, bool> {
-  using D = std::decay_t<E>;
   static_assert(std::is_invocable_r_v<bool, BinaryPredicate, char, char>, "magic_enum::enum_contains requires bool(char, char) invocable predicate.");
+  using D = std::decay_t<E>;
 
   return enum_cast<D>(value, std::move_if_noexcept(p)).has_value();
 }
@@ -1093,6 +1131,12 @@ std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& o
 }
 
 } // namespace magic_enum::flags::ostream_operators
+
+namespace flags::bitwise_operators {
+
+using namespace magic_enum::bitwise_operators;
+
+} // namespace magic_enum::flags::bitwise_operators
 
 } // namespace magic_enum
 

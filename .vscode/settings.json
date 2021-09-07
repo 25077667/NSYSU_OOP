@@ -67,6 +67,9 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "condition_variable": "cpp",
+        "regex": "cpp",
+        "shared_mutex": "cpp"
     },
 }

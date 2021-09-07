@@ -1,17 +1,9 @@
 #include "type.hpp"
-#include <algorithm>
-#include <string_view>
-#include <utility>
-using namespace std;
 
-Type::Type(string_view _type)
+
+Type max(const Type &t1, const Type &t2)
 {
-    auto mux = make_pair(find(basic.begin(), basic.end(), _type),
-                         find(specifier.begin(), specifier.end(), _type));
-    if (mux.first != basic.end())
-        this->__type = "BASIC";
-    else if (mux.second != specifier.end())
-        this->__type = "SPECIFIER";
-    else
-        this->__type = _type;
+    const auto w = std::max(t1.width, t2.width);
+    return (w == t1.width) ? Type(t1.lexeme, t1.width)
+                           : Type(t2.lexeme, t2.width);
 }

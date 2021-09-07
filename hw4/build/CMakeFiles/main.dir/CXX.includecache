@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/media/d/git/nsysu/oop/hw4/driver/main.cpp
+iostream
+-
+../lib/lexer.hpp
+/media/d/git/nsysu/oop/hw4/lib/lexer.hpp
+../lib/token.hpp
+/media/d/git/nsysu/oop/hw4/lib/token.hpp
+
+/media/d/git/nsysu/oop/hw4/lib/lexer.hpp
+memory
+-
+token.hpp
+/media/d/git/nsysu/oop/hw4/lib/token.hpp
+
+/media/d/git/nsysu/oop/hw4/lib/tag.hpp
+memory
+-
+string_view
+-
+unordered_map
+-
+
+/media/d/git/nsysu/oop/hw4/lib/token.hpp
+memory
+-
+string_view
+-
+unordered_map
+-
+tag.hpp
+/media/d/git/nsysu/oop/hw4/lib/tag.hpp
+

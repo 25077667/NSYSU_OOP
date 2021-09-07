@@ -1,28 +1,37 @@
 #ifndef TYPE_HPP
 #define TYPE_HPP
-#include <array>
+#include <memory>
 #include <string_view>
+#include <unordered_map>
+#include "tag.hpp"
+#include "word.hpp"
 
-using namespace std;
 
-class Type
+class Type : public Word
 {
 private:
-    string_view __type;
-    static constexpr array<string_view, 9> basic = {
-        {"int", "float", "double", "char", "bool", "void", "string", "auto",
-         "enum"}};  // class is not a type
-    static constexpr array<string_view, 17> specifier = {
-        {"signed", "unsigned", "long", "short", "static", "extern", "const",
-         "inline", "volatile", "restrict", "public", "private", "protected",
-         "virtual", "constexpr", "explicit", "friend"}};
+    const char width;
 
 public:
     Type() = delete;
-    Type(string_view _type);
-    ~Type() = default;
-    string_view getType() { return this->__type; }
-    operator bool() const { return __type == "BASIC" || __type == "SPECIFIER"; }
+    Type(std::string_view _type, unsigned char _width)
+        : Word(_type, Tag::BASIC), width(_width)
+    {
+    }
+    Type(const Type &) = default;
+    bool is_numeric() const
+    {
+        return lexeme == "char" || lexeme == "int" || lexeme == "float";
+    }
+    friend Type max(const Type &t1, const Type &t2);
+};
+
+
+const std::unordered_map<std::string_view, std::shared_ptr<Type>> type_table{
+    {"int", std::make_shared<Type>("int", 4)},
+    {"char", std::make_shared<Type>("char", 1)},
+    {"bool", std::make_shared<Type>("bool", 1)},
+    {"float", std::make_shared<Type>("float", 8)},
 };
 
 #endif

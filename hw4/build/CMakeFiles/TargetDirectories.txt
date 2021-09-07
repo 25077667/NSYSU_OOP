@@ -1,0 +1,4 @@
+/media/d/git/nsysu/oop/hw4/build/CMakeFiles/edit_cache.dir
+/media/d/git/nsysu/oop/hw4/build/CMakeFiles/rebuild_cache.dir
+/media/d/git/nsysu/oop/hw4/build/CMakeFiles/lex.dir
+/media/d/git/nsysu/oop/hw4/build/CMakeFiles/main.dir

@@ -1,13 +1,13 @@
 #ifndef LEXER_HPP
 #define LEXER_HPP
+#include <memory>
 #include "token.hpp"
-using namespace std;
 
-class Lexer : public Token
+class Lexer
 {
 public:
-    Lexer() = default;
-    Token scan();
+    constexpr Lexer() = default;
+    std::shared_ptr<Token> scan();
 };
 
 #endif
