@@ -3,6 +3,7 @@
 #include <iostream>
 #include <regex>
 #include <stdexcept>
+#include <unordered_map>
 #include "num.hpp"
 #include "tag.hpp"
 #include "token.hpp"
