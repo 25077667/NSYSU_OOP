@@ -26,14 +26,10 @@ static void help(std::string procName)
         << std::endl
         << std::endl
         << "Important:" << std::endl
-        << "   This program is not meant to be a full tar implementation."
+        << "    This program is not meant to be a full tar implementation. Only a subset of the functions the GNU tar utility are supported." << std::endl
         << std::endl
-        << "   Only a subset of the functions the GNU tar utility has "
-        << "are supported." << std::endl
-        << std::endl
-        << "    Special files that already exist will not be replaced when "
-        << "extracting (no error)" << std::endl
-        << "   Regular expression expansion/matching is not done." << std::endl
+        << "    Special files that already exist will not be replaced when extracting (no error)" << std::endl
+        << "    Regular expression expansion/matching is not done." << std::endl
         << std::endl
         << "    options (only one allowed at a time):" << std::endl
         << "       a - append files to archive" << std::endl
