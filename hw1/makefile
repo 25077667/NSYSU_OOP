@@ -1,10 +1,12 @@
-FLAG = -O2 -g -Wall
+FLAG = -Ofast -Wall
 
 all: dep
 	gcc c/main.c stack_c.o ${FLAG} -o c_main.elf
 	gcc c/main2.c stack_c.o ${FLAG} -o c_main2.elf
+	gcc c/driver.c stack_c.o ${FLAG} -o special_driver.elf
 	g++ c++/main.cpp stack_cpp.o stack_c.o ${FLAG} -o cpp_main.elf
 	g++ c++/main2.cpp stack_cpp.o stack_c.o ${FLAG} -o cpp_main2.elf
+	strip special_driver.elf
 
 dep:
 	gcc -c src/c/stack.c ${FLAG} -L -fPIC -shared -o stack_c.o
