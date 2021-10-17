@@ -1,4 +1,4 @@
-FLAG = -Ofast -Wall
+FLAG = -Ofast -Wall --static
 
 all: dep
 	gcc c/main.c stack_c.o ${FLAG} -o c_main.elf

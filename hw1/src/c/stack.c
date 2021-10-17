@@ -20,7 +20,7 @@ pool_t *stack_pool = NULL;
 void push(struct stack *this, int x)
 {
     /* The new comming element is out of range */
-    if (this->sp > 98) {
+    if (__glibc_unlikely(this->sp > 98)) {
         /* Get this block's ll_stack_t */
         pool_t *curr = stack_pool;
         while (curr && curr->me && curr->me->block != this)
@@ -45,7 +45,7 @@ void push(struct stack *this, int x)
 
 int pop(struct stack *this)
 {
-    if (this->sp > -1)
+    if (__glibc_likely(this->sp > -1))
         return this->stk[this->sp--];
 
     /* Reach the bottom of `stack` */
